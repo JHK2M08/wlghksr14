@@ -6,7 +6,154 @@
     <title>공지사항</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 스타일 코드 (변경 없음) */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: #1e90ff;
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            overflow-y: scroll;
+        }
+
+        header {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #1e90ff;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #1e90ff;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 1rem;
+        }
+
+        nav ul li a {
+            color: #1e90ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+        }
+
+        #homeBtn {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        #homeBtn:hover {
+            background-color: #1c86ee;
+        }
+
+        #titleInput, #contentInput {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #1e90ff;
+            border-radius: 5px;
+            overflow: hidden;
+            resize: none;
+        }
+
+        #titleInput {
+            font-weight: bold;
+        }
+
+        #addNoticeBtn {
+            padding: 10px 15px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #addNoticeBtn:hover {
+            background-color: #1c86ee;
+        }
+
+        .noticeItem {
+            background: #ffffff;
+            margin: 5px 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            white-space: pre-wrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .noticeItem .editBtn, .noticeItem .deleteBtn, .noticeItem .pinBtn {
+            margin: 0 5px;
+        }
+
+        .editBtn, .deleteBtn, .pinBtn {
+            background: #1e90ff;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .editBtn {
+            background: #4fc3f7;
+            color: #003a7d;
+        }
+
+        .deleteBtn {
+            background: #1CA9C9;
+        }
+
+        .pinBtn {
+            background: #87CEEB;
+            color: #003a7d;
+        }
+
+        .dateTime {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .buttonContainer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .buttonContainer button {
+            flex: 1;
+            margin: 0 2px;
+        }
     </style>
 </head>
 <body>
@@ -41,7 +188,7 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        document.getElementById('addNoticeBtn').onclick = async function() {
+        document.getElementById('addNoticeBtn').onclick = function() {
             const titleInput = document.getElementById('titleInput');
             const contentInput = document.getElementById('contentInput');
             const titleText = titleInput.value.trim();
@@ -49,18 +196,19 @@
 
             if (titleText !== '' && contentText !== '') {
                 const noticeDateTime = new Date().toLocaleString(); // 현재 날짜와 시간
-                await saveNotice(titleText, contentText, noticeDateTime);
+                const noticeItem = createNoticeItem(titleText, contentText, noticeDateTime);
+                document.getElementById('noticeList').appendChild(noticeItem);
+                saveNotice(titleText, contentText, noticeDateTime);
                 titleInput.value = '';
                 contentInput.value = '';
                 titleInput.style.height = 'auto';
                 contentInput.style.height = 'auto';
-                loadNotices(); // 공지사항 목록 새로 고침
             } else {
                 alert('제목과 내용을 입력하세요.');
             }
         };
 
-        async function createNoticeItem(titleText, contentText, dateTime, pinned = false) {
+        function createNoticeItem(titleText, contentText, dateTime, pinned = false) {
             const noticeItem = document.createElement('li');
             noticeItem.className = 'noticeItem';
             noticeItem.innerHTML = `
@@ -74,65 +222,72 @@
                 </div>
             `;
 
-            noticeItem.querySelector('.deleteBtn').onclick = async function() {
-                await deleteNotice(titleText, contentText);
+            noticeItem.querySelector('.deleteBtn').onclick = function() {
                 noticeItem.remove();
+                removeNoticeFromStorage(titleText, contentText);
             };
 
             noticeItem.querySelector('.editBtn').onclick = function() {
                 editNotice(noticeItem, titleText, contentText);
             };
 
-            noticeItem.querySelector('.pinBtn').onclick = async function() {
+            noticeItem.querySelector('.pinBtn').onclick = function() {
                 if (pinned) {
                     noticeItem.querySelector('.pinBtn').innerText = '고정';
                     noticeItem.classList.remove('pinned');
-                    await pinNotice(titleText, contentText, false);
+                    unpinNotice(titleText, contentText);
                 } else {
                     noticeItem.querySelector('.pinBtn').innerText = '고정 해제';
                     noticeItem.classList.add('pinned');
-                    await pinNotice(titleText, contentText, true);
+                    pinNotice(titleText, contentText);
                 }
             };
 
             return noticeItem;
         }
 
-        async function saveNotice(titleText, contentText, dateTime, pinned = false) {
-            await fetch('http://localhost:3000/store', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ title: titleText, content: contentText, dateTime: dateTime, pinned: pinned }),
-            });
+        function saveNotice(titleText, contentText, dateTime, pinned = false) {
+            let notices = JSON.parse(localStorage.getItem('notices')) || [];
+            notices.push({ title: titleText, content: contentText, dateTime: dateTime, pinned: pinned });
+            localStorage.setItem('notices', JSON.stringify(notices));
         }
 
-        async function deleteNotice(titleText, contentText) {
-            await fetch('http://localhost:3000/delete', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ title: titleText, content: contentText }),
-            });
+        function removeNoticeFromStorage(titleText, contentText) {
+            let notices = JSON.parse(localStorage.getItem('notices')) || [];
+            notices = notices.filter(notice => !(notice.title === titleText && notice.content === contentText));
+            localStorage.setItem('notices', JSON.stringify(notices));
         }
 
-        async function pinNotice(titleText, contentText, pinned) {
-            await fetch('http://localhost:3000/pin', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ title: titleText, content: contentText, pinned: pinned }),
+        function pinNotice(titleText, contentText) {
+            let notices = JSON.parse(localStorage.getItem('notices')) || [];
+            notices = notices.map(notice => {
+                if (notice.title === titleText && notice.content === contentText) {
+                    notice.pinned = true;
+                }
+                return notice;
             });
+            localStorage.setItem('notices', JSON.stringify(notices));
+            loadNotices();
         }
 
-        async function loadNotices() {
-            const response = await fetch('http://localhost:3000/retrieve');
-            const notices = await response.json();
+        function unpinNotice(titleText, contentText) {
+            let notices = JSON.parse(localStorage.getItem('notices')) || [];
+            notices = notices.map(notice => {
+                if (notice.title === titleText && notice.content === contentText) {
+                    notice.pinned = false;
+                }
+                return notice;
+            });
+            localStorage.setItem('notices', JSON.stringify(notices));
+            loadNotices();
+        }
+
+        function loadNotices() {
+            const notices = JSON.parse(localStorage.getItem('notices')) || [];
             const noticeList = document.getElementById('noticeList');
             noticeList.innerHTML = '';
+
+            notices.sort((a, b) => b.pinned - a.pinned);
 
             notices.forEach(notice => {
                 const noticeItem = createNoticeItem(notice.title, notice.content, notice.dateTime, notice.pinned);
@@ -150,7 +305,7 @@
             contentInput.style.height = 'auto';
 
             noticeItem.remove();
-            deleteNotice(oldTitle, oldContent);
+            removeNoticeFromStorage(oldTitle, oldContent);
         }
     </script>
 </body>

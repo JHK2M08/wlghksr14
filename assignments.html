@@ -51,8 +51,7 @@
             margin: 0 auto;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
-            min-height: 100vh;
-        }
+            min-height: 100vh;        }
 
         h1, h2 {
             color: #1e90ff;
@@ -211,8 +210,6 @@
     </main>
     <button id="homeBtn" onclick="window.location.href='index.html';">홈</button>
     <script>
-        const API_BASE_URL = 'http://localhost:3000'; // 서버의 URL
-
         document.addEventListener('DOMContentLoaded', loadTasks);
         document.addEventListener('DOMContentLoaded', loadNotes);
 
@@ -221,7 +218,7 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        document.getElementById('addTaskBtn').onclick = async function() {
+        document.getElementById('addTaskBtn').onclick = function() {
             const taskInput = document.getElementById('taskInput');
             const dateInput = document.getElementById('dateInput');
             const timeInput = document.getElementById('timeInput');
@@ -233,9 +230,7 @@
                 const taskTableBody = document.querySelector('#taskTable tbody');
                 const taskRow = createTaskRow(taskText, taskDate, taskTime, false);
                 taskTableBody.appendChild(taskRow);
-
-                // 서버에 저장
-                await saveTask(taskText, taskDate, taskTime, false);
+                saveTask(taskText, taskDate, taskTime, false);
                 taskInput.value = '';
                 dateInput.value = '';
                 timeInput.value = '';
@@ -245,7 +240,7 @@
             }
         };
 
-        document.getElementById('saveNoteBtn').onclick = async function() {
+        document.getElementById('saveNoteBtn').onclick = function() {
             const noteInput = document.getElementById('noteInput');
             const noteText = noteInput.value.trim();
 
@@ -253,9 +248,7 @@
                 const noteList = document.getElementById('noteList');
                 const noteItem = createNoteItem(noteText);
                 noteList.appendChild(noteItem);
-
-                // 서버에 저장
-                await saveNote(noteText);
+                saveNote(noteText);
 
                 noteInput.value = '';
                 noteInput.style.height = 'auto';
@@ -279,14 +272,14 @@
                 </td>
             `;
 
-            taskRow.querySelector('.completeCheckbox').onclick = async function() {
+            taskRow.querySelector('.completeCheckbox').onclick = function() {
                 taskRow.classList.toggle('completed');
-                await toggleTaskCompletion(taskText, taskDate, taskTime);
+                toggleTaskCompletion(taskText, taskDate, taskTime);
             };
 
-            taskRow.querySelector('.deleteBtn').onclick = async function() {
+            taskRow.querySelector('.deleteBtn').onclick = function() {
                 taskRow.remove();
-                await removeTaskFromServer(taskText, taskDate, taskTime);
+                removeTaskFromStorage(taskText, taskDate, taskTime);
             };
 
             taskRow.querySelector('.editBtn').onclick = function() {
@@ -307,9 +300,9 @@
                 </div>
             `;
 
-            noteItem.querySelector('.deleteBtn').onclick = async function() {
+            noteItem.querySelector('.deleteBtn').onclick = function() {
                 noteItem.remove();
-                await removeNoteFromServer(noteText);
+                removeNoteFromStorage(noteText);
             };
 
             noteItem.querySelector('.editBtn').onclick = function() {
@@ -319,31 +312,22 @@
             return noteItem;
         }
 
-        async function saveTask(taskText, taskDate, taskTime, completed) {
-            await fetch(`${API_BASE_URL}/tasks`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: taskText, date: taskDate, time: taskTime, completed }),
-            });
+        function saveTask(taskText, taskDate, taskTime, completed) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text: taskText, date: taskDate, time: taskTime, completed: completed });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
             sortTasks();
         }
 
-        async function removeTaskFromServer(taskText, taskDate, taskTime) {
-            await fetch(`${API_BASE_URL}/tasks`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: taskText, date: taskDate, time: taskTime }),
-            });
+        function removeTaskFromStorage(taskText, taskDate, taskTime) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.filter(task => !(task.text === taskText && task.date === taskDate && task.time === taskTime));
+            localStorage.setItem('tasks', JSON.stringify(tasks));
             sortTasks();
         }
 
-        async function loadTasks() {
-            const response = await fetch(`${API_BASE_URL}/tasks`);
-            const tasks = await response.json();
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
             tasks.forEach(task => {
                 const taskRow = createTaskRow(task.text, task.date, task.time, task.completed);
                 document.querySelector('#taskTable tbody').appendChild(taskRow);
@@ -351,44 +335,36 @@
             sortTasks();
         }
 
-        async function saveNote(noteText) {
-            await fetch(`${API_BASE_URL}/notes`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: noteText }),
-            });
-        }
-
-        async function removeNoteFromServer(noteText) {
-            await fetch(`${API_BASE_URL}/notes`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: noteText }),
-            });
-        }
-
-        async function loadNotes() {
-            const response = await fetch(`${API_BASE_URL}/notes`);
-            const notes = await response.json();
+        function loadNotes() {
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
             notes.forEach(note => {
                 const noteItem = createNoteItem(note);
                 document.getElementById('noteList').appendChild(noteItem);
             });
         }
 
-        async function toggleTaskCompletion(taskText, taskDate, taskTime) {
-            await fetch(`${API_BASE_URL}/tasks/completion`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: taskText, date: taskDate, time: taskTime }),
+        function saveNote(noteText) {
+            let notes = JSON.parse(localStorage.getItem('notes')) || [];
+            notes.push(noteText);
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+
+        function removeNoteFromStorage(noteText) {
+            let notes = JSON.parse(localStorage.getItem('notes')) || [];
+            notes = notes.filter(note => note !== noteText);
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+
+        function toggleTaskCompletion(taskText, taskDate, taskTime) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.map(task => {
+                if (task.text === taskText && task.date === taskDate && task.time === taskTime) {
+                    task.completed = !task.completed;
+                }
+                return task;
             });
-            sortTasks();
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            sortTasks(); // Sort tasks after toggling completion
         }
 
         function editTask(taskRow, oldText, oldDate, oldTime) {
@@ -401,7 +377,7 @@
             timeInput.value = oldTime;
 
             taskRow.remove();
-            removeTaskFromServer(oldText, oldDate, oldTime);
+            removeTaskFromStorage(oldText, oldDate, oldTime);
         }
 
         function editNote(noteItem, oldText) {
@@ -412,7 +388,7 @@
             noteInput.style.height = (noteInput.scrollHeight) + 'px';
 
             noteItem.remove();
-            removeNoteFromServer(oldText);
+            removeNoteFromStorage(oldText);
         }
 
         function sortTasks() {

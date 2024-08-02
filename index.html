@@ -6,7 +6,6 @@
     <title>SASA wlghksr14 homepage</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 기존 스타일 유지 */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -100,19 +99,11 @@
         #attendanceBtn:hover {
             background-color: #1c86ee;
         }
-
-        .form-container {
-            margin-top: 20px;
-        }
-
-        .form-container input, .form-container button {
-            margin: 5px 0;
-        }
     </style>
 </head>
 <body>
     <header>
-        <br>
+	    <br>
         <h1>Sejong Academy of Science and Arts</h1>
         <p>No. 20240018</p>
         <nav>
@@ -139,24 +130,14 @@
             </div>
             <h2>홈</h2>
             <p>SASA에 오신 것을 환영합니다!</p>
-            <br>
-            <a href="https://drive.google.com/drive/folders/1aWwcAtw1wJm6lD8iUMtAB7gwFJFvI9fJ">개인 드라이브 바로가기</a>
-            <p></p>
-            <a href="https://drive.google.com/drive/folders/0AO_4-Agt6bISUk9PVA">공유 드라이브 바로가기</a>
-            <p></p>
-            <a href="https://drive.google.com/drive/folders/1pT87B9M4TxNbw6cu_HtO6nhY7hjzdVAO">SASA Archive 바로가기</a>
-            <p><br><br></p>
-            <hr style="border: solid 3px skyblue;">
-
-            <!-- 데이터 저장 및 조회 폼 추가 -->
-            <div class="form-container">
-                <h2>데이터 저장 및 조회</h2>
-                <input type="text" id="dataKey" placeholder="키">
-                <input type="text" id="dataValue" placeholder="값">
-                <button onclick="storeData()">저장</button>
-                <button onclick="retrieveData()">조회</button>
-                <div id="result"></div>
-            </div>
+	    <br>
+	    <a href="https://drive.google.com/drive/folders/1aWwcAtw1wJm6lD8iUMtAB7gwFJFvI9fJ">개인 드라이브 바로가기</a>
+		<p></p>
+	    <a href="https://drive.google.com/drive/folders/0AO_4-Agt6bISUk9PVA">공유 드라이브 바로가기</a>
+		<p></p>
+	    <a href="https://drive.google.com/drive/folders/1pT87B9M4TxNbw6cu_HtO6nhY7hjzdVAO">SASA Archive 바로가기</a>
+	    <p><br><br></p>
+	    <hr style="border: solid 3px skyblue;">
         </section>
     </div>
     <footer>
@@ -175,26 +156,6 @@
             if (slideIndex > slides.length) {slideIndex = 1}
             slides[slideIndex-1].style.display = "block";
             setTimeout(showSlides, 2000);
-        }
-
-        async function storeData() {
-            const key = document.getElementById('dataKey').value;
-            const value = document.getElementById('dataValue').value;
-            await fetch('http://localhost:3000/store', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ key, value }),
-            });
-            alert('데이터가 저장되었습니다.');
-        }
-
-        async function retrieveData() {
-            const key = document.getElementById('dataKey').value;
-            const response = await fetch(`http://localhost:3000/retrieve?key=${key}`);
-            const data = await response.json();
-            document.getElementById('result').textContent = data.value || '데이터를 찾을 수 없습니다.';
         }
     </script>
 </body>

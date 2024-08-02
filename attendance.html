@@ -146,11 +146,9 @@
         <p>SASA 1-4 homepage &copy; 2024</p>
     </footer>
     <script>
-        const API_BASE_URL = 'http://localhost:3000'; // 서버 주소를 여기에 설정하세요
-
         document.addEventListener('DOMContentLoaded', loadRecords);
 
-        document.getElementById('addRecordBtn').onclick = async function() {
+        document.getElementById('addRecordBtn').onclick = function() {
             const idInput = document.getElementById('idInput');
             const nameInput = document.getElementById('nameInput');
             const id = idInput.value.trim();
@@ -158,19 +156,20 @@
             const dateTime = new Date().toLocaleString(); // 현재 날짜와 시간
 
             if (id && name) {
-                await saveRecord(dateTime, id, name);
+                const recordItem = createRecordItem(dateTime, id, name);
+                saveRecord(dateTime, id, name);
                 idInput.value = '';
                 nameInput.value = '';
-                loadRecords();
+                loadRecords(); // Records are reloaded and sorted after adding new record
             } else {
                 alert('모든 필드를 입력하세요.');
             }
         };
 
-        document.getElementById('resetListBtn').onclick = async function() {
+        document.getElementById('resetListBtn').onclick = function() {
             if (confirm('출석 리스트를 리셋하시겠습니까?')) {
                 document.getElementById('recordList').innerHTML = '';
-                await resetRecords();
+                localStorage.removeItem('attendanceRecords');
             }
         };
 
@@ -185,31 +184,23 @@
             return recordItem;
         }
 
-        async function saveRecord(dateTime, id, name) {
-            await fetch(`${API_BASE_URL}/records`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ dateTime, id, name }),
-            });
+        function saveRecord(dateTime, id, name) {
+            let records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+            records.push({ dateTime, id, name });
+            localStorage.setItem('attendanceRecords', JSON.stringify(records));
         }
 
-        async function loadRecords() {
-            const response = await fetch(`${API_BASE_URL}/records`);
-            const records = await response.json();
+        function loadRecords() {
             const recordsContainer = document.getElementById('recordList');
+            let records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+
+            // Sort records by id
+            records.sort((a, b) => a.id.localeCompare(b.id));
 
             recordsContainer.innerHTML = '';
             records.forEach(record => {
                 const recordItem = createRecordItem(record.dateTime, record.id, record.name);
                 recordsContainer.appendChild(recordItem);
-            });
-        }
-
-        async function resetRecords() {
-            await fetch(`${API_BASE_URL}/records`, {
-                method: 'DELETE'
             });
         }
     </script>

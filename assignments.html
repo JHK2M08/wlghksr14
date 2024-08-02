@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정표 및 기타 사항</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: #1e90ff;
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            overflow-y: scroll;
+        }
+
+        header {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #1e90ff;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #1e90ff;
+        }
+
+        main {
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            min-height: 100vh;        }
+
+        h1, h2 {
+            color: #1e90ff;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #1e90ff;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e0f0ff;
+        }
+
+        #taskInput, #dateInput, #timeInput {
+            width: calc(33% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #1e90ff;
+            border-radius: 5px;
+        }
+
+        #noteInput {
+            width: calc(66% - 22px);
+            padding: 10px;
+            border: 1px solid #1e90ff;
+            border-radius: 5px;
+        }
+
+        #addTaskBtn, #saveNoteBtn {
+            padding: 10px 15px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        #addTaskBtn:hover, #saveNoteBtn:hover {
+            background-color: #1c86ee;
+        }
+
+        #noteContainer {
+            margin-top: 20px;
+        }
+
+        #noteList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .noteItem {
+            background: #ffffff;
+            margin: 5px 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            white-space: pre-wrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .noteItem .editBtn, .noteItem .deleteBtn {
+            margin-top: 5px;
+        }
+
+        .editBtn, .deleteBtn {
+            background: #1e90ff;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .editBtn {
+            background: #4fc3f7;
+            color: #003a7d;
+        }
+
+        .deleteBtn {
+            background: #1CA9C9;
+        }
+
+        textarea {
+            overflow: hidden;
+            resize: none;
+            border: 1px solid #1e90ff;
+            border-radius: 5px;
+        }
+
+        #homeBtn {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        #homeBtn:hover {
+            background-color: #1c86ee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sejong Academy of Science and Arts</h1>
+        <p>Class No.4</p>
+    </header>
+    <main>
+        <h1>일정표 및 기타 사항</h1>
+        <input type="text" id="taskInput" placeholder="일정을 입력하세요...">
+        <input type="date" id="dateInput">
+        <input type="time" id="timeInput">
+        <button id="addTaskBtn">추가</button>
+
+        <table id="taskTable">
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>시간</th>
+                    <th>D-Day</th>
+                    <th>일정</th>
+                    <th>작업</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div id="noteContainer">
+            <h2>기타 사항          </h2>
+            <textarea id="noteInput" rows="4" placeholder="메모를 입력하세요..."></textarea>
+            <button id="saveNoteBtn">저장</button>
+            <ul id="noteList"></ul>
+        </div>
+    </main>
+    <button id="homeBtn" onclick="window.location.href='index.html';">홈</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTasks);
+        document.addEventListener('DOMContentLoaded', loadNotes);
+
+        document.getElementById('noteInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        document.getElementById('addTaskBtn').onclick = function() {
+            const taskInput = document.getElementById('taskInput');
+            const dateInput = document.getElementById('dateInput');
+            const timeInput = document.getElementById('timeInput');
+            const taskText = taskInput.value.trim();
+            const taskDate = dateInput.value;
+            const taskTime = timeInput.value;
+
+            if (taskText !== '') {
+                const taskTableBody = document.querySelector('#taskTable tbody');
+                const taskRow = createTaskRow(taskText, taskDate, taskTime, false);
+                taskTableBody.appendChild(taskRow);
+                saveTask(taskText, taskDate, taskTime, false);
+                taskInput.value = '';
+                dateInput.value = '';
+                timeInput.value = '';
+                sortTasks();
+            } else {
+                alert('일정을 입력하세요.');
+            }
+        };
+
+        document.getElementById('saveNoteBtn').onclick = function() {
+            const noteInput = document.getElementById('noteInput');
+            const noteText = noteInput.value.trim();
+
+            if (noteText !== '') {
+                const noteList = document.getElementById('noteList');
+                const noteItem = createNoteItem(noteText);
+                noteList.appendChild(noteItem);
+                saveNote(noteText);
+
+                noteInput.value = '';
+                noteInput.style.height = 'auto';
+            } else {
+                alert('메모를 입력하세요.');
+            }
+        };
+
+        function createTaskRow(taskText, taskDate, taskTime, completed) {
+            const taskRow = document.createElement('tr');
+            taskRow.className = 'taskItem' + (completed ? ' completed' : '');
+            taskRow.innerHTML = `
+                <td>${taskDate}</td>
+                <td>${taskTime}</td>
+                <td>${calculateDDay(taskDate)}</td>
+                <td>${taskText}</td>
+                <td>
+                    <input type="checkbox" class="completeCheckbox" ${completed ? 'checked' : ''}>
+                    <button class="editBtn">수정</button>
+                    <button class="deleteBtn">삭제</button>
+                </td>
+            `;
+
+            taskRow.querySelector('.completeCheckbox').onclick = function() {
+                taskRow.classList.toggle('completed');
+                toggleTaskCompletion(taskText, taskDate, taskTime);
+            };
+
+            taskRow.querySelector('.deleteBtn').onclick = function() {
+                taskRow.remove();
+                removeTaskFromStorage(taskText, taskDate, taskTime);
+            };
+
+            taskRow.querySelector('.editBtn').onclick = function() {
+                editTask(taskRow, taskText, taskDate, taskTime);
+            };
+
+            return taskRow;
+        }
+
+        function createNoteItem(noteText) {
+            const noteItem = document.createElement('li');
+            noteItem.className = 'noteItem';
+            noteItem.innerHTML = `
+                <span>${noteText}</span>
+                <div>
+                    <button class="editBtn">수정</button>
+                    <button class="deleteBtn">삭제</button>
+                </div>
+            `;
+
+            noteItem.querySelector('.deleteBtn').onclick = function() {
+                noteItem.remove();
+                removeNoteFromStorage(noteText);
+            };
+
+            noteItem.querySelector('.editBtn').onclick = function() {
+                editNote(noteItem, noteText);
+            };
+
+            return noteItem;
+        }
+
+        function saveTask(taskText, taskDate, taskTime, completed) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text: taskText, date: taskDate, time: taskTime, completed: completed });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            sortTasks();
+        }
+
+        function removeTaskFromStorage(taskText, taskDate, taskTime) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.filter(task => !(task.text === taskText && task.date === taskDate && task.time === taskTime));
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            sortTasks();
+        }
+
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => {
+                const taskRow = createTaskRow(task.text, task.date, task.time, task.completed);
+                document.querySelector('#taskTable tbody').appendChild(taskRow);
+            });
+            sortTasks();
+        }
+
+        function loadNotes() {
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            notes.forEach(note => {
+                const noteItem = createNoteItem(note);
+                document.getElementById('noteList').appendChild(noteItem);
+            });
+        }
+
+        function saveNote(noteText) {
+            let notes = JSON.parse(localStorage.getItem('notes')) || [];
+            notes.push(noteText);
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+
+        function removeNoteFromStorage(noteText) {
+            let notes = JSON.parse(localStorage.getItem('notes')) || [];
+            notes = notes.filter(note => note !== noteText);
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+
+        function toggleTaskCompletion(taskText, taskDate, taskTime) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.map(task => {
+                if (task.text === taskText && task.date === taskDate && task.time === taskTime) {
+                    task.completed = !task.completed;
+                }
+                return task;
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            sortTasks(); // Sort tasks after toggling completion
+        }
+
+        function editTask(taskRow, oldText, oldDate, oldTime) {
+            const taskInput = document.getElementById('taskInput');
+            const dateInput = document.getElementById('dateInput');
+            const timeInput = document.getElementById('timeInput');
+
+            taskInput.value = oldText;
+            dateInput.value = oldDate;
+            timeInput.value = oldTime;
+
+            taskRow.remove();
+            removeTaskFromStorage(oldText, oldDate, oldTime);
+        }
+
+        function editNote(noteItem, oldText) {
+            const noteInput = document.getElementById('noteInput');
+
+            noteInput.value = oldText;
+            noteInput.style.height = 'auto';
+            noteInput.style.height = (noteInput.scrollHeight) + 'px';
+
+            noteItem.remove();
+            removeNoteFromStorage(oldText);
+        }
+
+        function sortTasks() {
+            const taskTableBody = document.querySelector('#taskTable tbody');
+            const rowsArray = Array.from(taskTableBody.rows);
+
+            rowsArray.sort((a, b) => {
+                const dateA = new Date(a.cells[0].innerText + ' ' + a.cells[1].innerText);
+                const dateB = new Date(b.cells[0].innerText + ' ' + b.cells[1].innerText);
+                return dateA - dateB;
+            });
+
+            taskTableBody.innerHTML = '';
+
+            rowsArray.forEach(row => taskTableBody.appendChild(row));
+        }
+
+        function calculateDDay(taskDate) {
+            const today = new Date();
+            const taskDay = new Date(taskDate);
+            const diffTime = taskDay - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+        }
+    </script>
+</body>
+</html>

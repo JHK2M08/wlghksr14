@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출석 체크</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: #1e90ff;
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        header {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #1e90ff;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #1e90ff;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 1rem;
+        }
+
+        nav ul li a {
+            color: #1e90ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+        }
+
+        footer {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #1e90ff;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            border-top: 2px solid #1e90ff;
+        }
+
+        #homeBtn {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        #homeBtn:hover {
+            background-color: #1c86ee;
+        }
+
+        #idInput, #nameInput {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #1e90ff;
+            border-radius: 5px;
+        }
+
+        #addRecordBtn, #resetListBtn {
+            padding: 10px 15px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #addRecordBtn:hover, #resetListBtn:hover {
+            background-color: #1c86ee;
+        }
+
+        .recordItem {
+            background: #ffffff;
+            margin: 5px 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .recordItem .dateTime {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>출석 체크</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">홈</a></li>
+                <li><a href="assignments.html">일정표 및 기타 사항</a></li>
+                <li><a href="notices.html">공지사항</a></li>
+                <li><a href="attendance-list.html">출석 기록</a></li>
+            </ul>
+        </nav>
+    </header>
+    <button id="homeBtn" onclick="window.location.href='index.html';">홈</button>
+    <div class="content">
+        <section id="attendance">
+            <h2>출석 체크</h2>
+            <input type="text" id="idInput" placeholder="학번을 입력하세요...">
+            <input type="text" id="nameInput" placeholder="이름을 입력하세요...">
+            <button id="addRecordBtn">출석 체크</button>
+            <button id="resetListBtn">리스트 리셋</button>
+            <div id="recordList"></div>
+        </section>
+    </div>
+    <footer>
+        <p>SASA 1-4 homepage &copy; 2024</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadRecords);
+
+        document.getElementById('addRecordBtn').onclick = function() {
+            const idInput = document.getElementById('idInput');
+            const nameInput = document.getElementById('nameInput');
+            const id = idInput.value.trim();
+            const name = nameInput.value.trim();
+            const dateTime = new Date().toLocaleString(); // 현재 날짜와 시간
+
+            if (id && name) {
+                const recordItem = createRecordItem(dateTime, id, name);
+                saveRecord(dateTime, id, name);
+                idInput.value = '';
+                nameInput.value = '';
+                loadRecords(); // Records are reloaded and sorted after adding new record
+            } else {
+                alert('모든 필드를 입력하세요.');
+            }
+        };
+
+        document.getElementById('resetListBtn').onclick = function() {
+            if (confirm('출석 리스트를 리셋하시겠습니까?')) {
+                document.getElementById('recordList').innerHTML = '';
+                localStorage.removeItem('attendanceRecords');
+            }
+        };
+
+        function createRecordItem(dateTime, id, name) {
+            const recordItem = document.createElement('div');
+            recordItem.className = 'recordItem';
+            recordItem.innerHTML = `
+                <div class="dateTime">${dateTime}</div>
+                <p>학번: ${id}</p>
+                <p>이름: ${name}</p>
+            `;
+            return recordItem;
+        }
+
+        function saveRecord(dateTime, id, name) {
+            let records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+            records.push({ dateTime, id, name });
+            localStorage.setItem('attendanceRecords', JSON.stringify(records));
+        }
+
+        function loadRecords() {
+            const recordsContainer = document.getElementById('recordList');
+            let records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+
+            // Sort records by id
+            records.sort((a, b) => a.id.localeCompare(b.id));
+
+            recordsContainer.innerHTML = '';
+            records.forEach(record => {
+                const recordItem = createRecordItem(record.dateTime, record.id, record.name);
+                recordsContainer.appendChild(recordItem);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -407,12 +407,16 @@
         }
 
         function calculateDDay(taskDate) {
-            const today = new Date();
-            const taskDay = new Date(taskDate);
-            const diffTime = taskDay - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
-        }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
+
+    const taskDay = new Date(taskDate);
+    taskDay.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
+
+    const diffTime = taskDay - today;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+}
     </script>
 </body>
 </html>

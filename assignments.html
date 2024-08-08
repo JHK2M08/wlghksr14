@@ -51,7 +51,8 @@
             margin: 0 auto;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
-            min-height: 100vh;        }
+            min-height: 100vh;
+        }
 
         h1, h2 {
             color: #1e90ff;
@@ -262,8 +263,8 @@
             const taskRow = document.createElement('tr');
             taskRow.className = 'taskItem' + (completed ? ' completed' : '');
             taskRow.innerHTML = `
-                <td>${taskDate}</td>
-                <td>${taskTime}</td>
+                <td>${taskDate || ''}</td>
+                <td>${taskTime || ''}</td>
                 <td>${calculateDDay(taskDate)}</td>
                 <td>${taskText}</td>
                 <td>
@@ -397,8 +398,12 @@
             const rowsArray = Array.from(taskTableBody.rows);
 
             rowsArray.sort((a, b) => {
-                const dateA = new Date(a.cells[0].innerText + ' ' + a.cells[1].innerText);
-                const dateB = new Date(b.cells[0].innerText + ' ' + b.cells[1].innerText);
+                const dateA = a.cells[0].innerText ? new Date(a.cells[0].innerText + ' ' + a.cells[1].innerText) : null;
+                const dateB = b.cells[0].innerText ? new Date(b.cells[0].innerText + ' ' + b.cells[1].innerText) : null;
+
+                if (!dateA) return 1; // If dateA is null, push to bottom
+                if (!dateB) return -1; // If dateB is null, push to bottom
+
                 return dateA - dateB;
             });
 
@@ -408,16 +413,17 @@
         }
 
         function calculateDDay(taskDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
+            if (!taskDate) return '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
 
-    const taskDay = new Date(taskDate);
-    taskDay.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
+            const taskDay = new Date(taskDate);
+            taskDay.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
 
-    const diffTime = taskDay - today;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays == 0 ? `D-Day` : (diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`);
-}
+            const diffTime = taskDay - today;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays == 0 ? `D-Day` : (diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`);
+        }
     </script>
 </body>
 </html>

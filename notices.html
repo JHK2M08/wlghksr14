@@ -77,7 +77,6 @@
             margin-bottom: 10px;
             border: 1px solid #1e90ff;
             border-radius: 5px;
-            overflow: hidden;
             resize: none;
         }
 
@@ -301,8 +300,13 @@
 
             titleInput.value = oldTitle;
             contentInput.value = oldContent;
+            
+            // 텍스트 영역의 높이를 텍스트 내용에 맞게 자동으로 조절
             titleInput.style.height = 'auto';
+            titleInput.style.height = titleInput.scrollHeight + 'px';
+
             contentInput.style.height = 'auto';
+            contentInput.style.height = contentInput.scrollHeight + 'px';
 
             noticeItem.remove();
             removeNoticeFromStorage(oldTitle, oldContent);
